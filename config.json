@@ -11,23 +11,23 @@
   },
   "antiInbox": true,
   "checkApproval": true,
-  "language": "en",
+  "language": "fr",
   "notesLanguage": "change to your language with ISO 639-1 code, available languages: vi (Vietnamese), en (English)",
-  "nickNameBot": "GoatBot",
-  "prefix": "!",
+  "nickNameBot": "꒰🍿˖°❗◯⃝🫟🎬TRØN†ARËS†BØT🍿⃤ ⃧🍧❓°˖ 🎟️ ꒱",
+  "prefix": "+",
   "adminOnly": {
     "enable": false,
     "ignoreCommand": []
   },
   "adminBot": [
-    "61557290571000",
-    "100087625774227",
-    "61584035788710"
+    "61572476705473",
+    "",
+    ""
   ],
   "whiteListMode": {
     "enable": false,
-    "whiteListIds": ["61557290571000",
-"61584035788710",
+    "whiteListIds": ["61572476705473",
+"",
       ""
     ],
     "notes": "if you enable this feature, only the ids in the whiteListIds list can use the bot"
