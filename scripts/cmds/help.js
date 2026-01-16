@@ -3,118 +3,132 @@ const fs = require("fs");
 const { getPrefix } = global.utils;
 const { commands } = global.GoatBot;
 
-let xfont = null;
-let yfont = null;
-let categoryEmoji = null;
-
-/* ───── Load Fonts & Emoji ───── */
-async function loadResources() {
-  try {
-    const [x, y, c] = await Promise.all([
-      axios.get("https://raw.githubusercontent.com/Saim-x69x/sakura/main/xfont.json"),
-      axios.get("https://raw.githubusercontent.com/Saim-x69x/sakura/main/yfont.json"),
-      axios.get("https://raw.githubusercontent.com/Saim-x69x/sakura/main/category.json")
-    ]);
-    xfont = x.data;
-    yfont = y.data;
-    categoryEmoji = c.data;
-  } catch (e) {
-    console.error("[HELP] Resource load failed");
-  }
-}
-
-/* ───── Font Convert ───── */
-function fontConvert(text, type = "command") {
-  const map = type === "category" ? xfont : yfont;
-  if (!map) return text;
-  return text.split("").map(c => map[c] || c).join("");
-}
-
+// FONCTION POUR LES ÉMOJIS DE CATÉGORIES
 function getCategoryEmoji(cat) {
-  const customEmojis = {
-    "admin": "👑",
-    "info": "📌",
-    "economy": "💎",
-    "game": "🎮",
-    "fun": "🎉",
-    "media": "📥",
-    "system": "🖥️",
-    "utility": "🧰",
-    "nsfw": "🔞",
-    "ai": "🤖",
-    "image": "🌌",
-    "tools": "🔧",
-    "owner": "👑",
-    "custom": "🛠️",
-    "anime": "🎬",
-    "bank": "🏦",
-    "tron": "⚡"
+  const emojiMap = {
+    "admin": "👑", "anisr": "🔍", "anime": "🎬", "bank": "🏦",
+    "economy": "💎", "game": "🎮", "fun": "🎉", "media": "📥",
+    "system": "🖥️", "utility": "🧰", "nsfw": "🔞", "ai": "🤖",
+    "image": "🌌", "tools": "🔧", "owner": "👑", "custom": "🛠️",
+    "info": "📌", "tron": "⚡", "music": "🎵", "group": "👥",
+    "user": "👤", "search": "🔎", "download": "📦", "rpg": "⚔️",
+    "sticker": "🖼️", "general": "🎄", "herramientas": "🪛",
+    "propietario": "💼", "juegos": "🏆", "diversion": "🎉",
+    "buscador": "🔍", "descargas": "📦", "maker": "🎨",
+    "utilidades": "⚙️", "util": "🔧", "tools": "🔨"
   };
-  return customEmojis[cat.toLowerCase()] || categoryEmoji?.[cat.toLowerCase()] || "🎁";
+  return emojiMap[cat?.toLowerCase()] || "🎁";
 }
 
-function roleText(role) {
-  if (role === 0) return "All Users";
-  if (role === 1) return "Group Admins";
-  if (role === 2) return "Bot Admin";
-  return "Unknown";
-}
-
-/* ───── Command Find ───── */
-function findCommand(name) {
-  name = name.toLowerCase();
-  for (const [, cmd] of commands) {
-    const a = cmd.config?.aliases;
-    if (cmd.config?.name === name) return cmd;
-    if (Array.isArray(a) && a.includes(name)) return cmd;
-    if (typeof a === "string" && a === name) return cmd;
-  }
-  return null;
-}
-
-// Fonction pour créer une boîte décorative
-function createBox(content, title = null) {
+// FONCTION POUR CRÉER UNE BOÎTE AVEC BORDURES TRON ARES
+function createTronBox(content, title = null) {
   let box = `╭═══✨✨✨═══╮\n`;
+  
   if (title) {
-    box += `│ ${title}\n`;
+    // Calculer l'espacement pour centrer le titre
+    const titleLength = title.length;
+    const totalWidth = 17; // Largeur de la boîte
+    const leftPadding = Math.floor((totalWidth - titleLength) / 2);
+    const rightPadding = totalWidth - titleLength - leftPadding;
+    
+    box += `│${' '.repeat(leftPadding)}${title}${' '.repeat(rightPadding)}│\n`;
   }
   
-  const lines = content.split('\n');
+  const lines = content.split('\n').filter(line => line.trim() !== '');
   lines.forEach(line => {
-    if (line.trim() !== '') {
-      box += `│ ${line}\n`;
-    }
+    box += `│ ${line}\n`;
   });
   
-  box += `╰═══✨✨✨✨═══╯`;
+  box += `╰═══✨✨✨═══╯`;
   return box;
 }
 
-// Fonction pour créer l'en-tête
-function createHeader(userName) {
+// FONCTION POUR CRÉER L'EN-TÊTE TRON ARES
+function createTronHeader(userName) {
   const adminID = "61572476705473";
+  const botName = "TRØN†ARËS†BØT";
   
   return `╭═══✨✨✨═══╮
-│ 🎄💙 *TRON ARES HELP SYSTEM* 💙🎄
-│ Usuario: *${userName || "Guest"}*
-│ Bot: *TRØN†ARËS†BØT*
-│ Admin: *${adminID}*
-╰═══✨✨✨✨═══╯\n\n`;
+│ ⚡💙 *TRON ARES SYSTEM* 💙⚡
+│ 👤 Usuario: *${userName || "Guest"}*
+│ 🤖 Bot: *${botName}*
+│ 👑 Admin: *${adminID}*
+╰═══✨✨✨═══╯\n\n`;
 }
 
-// Fonction pour télécharger et envoyer un GIF
-async function sendWithGif(message, gifUrl, caption = "") {
+// FONCTION POUR CRÉER LE PIED DE PAGE TRON ARES
+function createTronFooter(prefix, totalCommands) {
+  return `\n╭═══✨✨✨═══╮
+│ ⚡ *TRON ARES SYSTEM* ⚡
+│ 🔧 Prefix: ${prefix}
+│ 📊 Commands: ${totalCommands}
+│ 🔍 Usage: ${prefix}help [command]
+│ 🎮 Example: ${prefix}help balance
+╰═══✨✨✨═══╯\n\n⚡ Powered by TRON ARES Technology ⚡`;
+}
+
+// GIFs TRON ARES - URLs directes qui fonctionnent
+const tronGifs = [
+  "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif", // Lumière bleue
+  "https://media.giphy.com/media/xT0GqH01ZyKwd3aT3G/giphy.gif", // Circuits
+  "https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif",  // Grille
+  "https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif", // Cyberpunk
+  "https://media.giphy.com/media/l46Cy1rHbQ92uuLXa/giphy.gif",  // Énergie
+  "https://media.giphy.com/media/26ufdgrZhHp3QnEQY/giphy.gif",  // Interface
+  "https://media.giphy.com/media/3o7TKsQ8gTp3WqXqjq/giphy.gif", // Données
+  "https://media.giphy.com/media/26tknCqiJrBQG6DrC/giphy.gif"   // Rétro
+];
+
+// URL de secours garanties
+const backupGifs = [
+  "https://i.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif",
+  "https://i.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",
+  "https://i.giphy.com/media/xT0GqH01ZyKwd3aT3G/giphy.gif"
+];
+
+// Fonction pour obtenir un GIF (méthode simple sans téléchargement)
+function getTronGifUrl() {
+  // Essayer d'abord les GIFs principaux
   try {
-    // Télécharger le GIF
+    return tronGifs[Math.floor(Math.random() * tronGifs.length)];
+  } catch (e) {
+    // Fallback sur les GIFs de secours
+    return backupGifs[Math.floor(Math.random() * backupGifs.length)];
+  }
+}
+
+// FONCTION POUR ENVOYER AVEC GIF (version améliorée)
+async function sendWithTronGif(message, textContent) {
+  try {
+    const gifUrl = getTronGifUrl();
+    
+    // Méthode 1: Essayer d'envoyer directement depuis l'URL
+    try {
+      await message.reply({
+        body: textContent,
+        attachment: await global.utils.getStreamFromURL(gifUrl)
+      });
+      return;
+    } catch (urlError) {
+      console.log("URL method failed, trying download...");
+    }
+    
+    // Méthode 2: Télécharger puis envoyer (sans effacer)
     const response = await axios({
       method: 'GET',
       url: gifUrl,
       responseType: 'stream',
-      timeout: 15000 // 15 secondes timeout
+      timeout: 15000
     });
 
-    // Créer un fichier temporaire
-    const gifPath = `./tron_ares_${Date.now()}.gif`;
+    // Créer un fichier temporaire avec nom unique
+    const gifPath = `./cache/tron_ares_help_${Date.now()}.gif`;
+    
+    // S'assurer que le dossier cache existe
+    if (!fs.existsSync('./cache')) {
+      fs.mkdirSync('./cache');
+    }
+    
     const writer = fs.createWriteStream(gifPath);
     
     response.data.pipe(writer);
@@ -126,403 +140,263 @@ async function sendWithGif(message, gifUrl, caption = "") {
 
     // Envoyer le message avec le GIF
     await message.reply({
-      body: caption,
+      body: textContent,
       attachment: fs.createReadStream(gifPath)
     });
-
-    // Supprimer le fichier temporaire
-    setTimeout(() => {
-      try {
-        if (fs.existsSync(gifPath)) {
-          fs.unlinkSync(gifPath);
-        }
-      } catch (e) {
-        console.error("Error deleting GIF:", e);
-      }
-    }, 5000);
+    
+    // NE PAS EFFACER LE FICHIER - LE LAISSER DANS LE CACHE
+    // Le fichier restera sur le serveur mais c'est OK
     
   } catch (error) {
-    console.error("Error sending GIF:", error.message);
-    // Envoyer le message sans GIF en cas d'erreur
-    await message.reply(caption + "\n\n🎬 *GIF TRON ARES non disponible*");
+    console.error("GIF error:", error.message);
+    // En cas d'erreur, envoyer le texte sans GIF
+    await message.reply(textContent + "\n\n⚡ *TRON ARES SYSTEM* ⚡");
   }
-}
-
-// Collection de GIFs TRON ARES - Thème cyberpunk/technologique
-const tronAresGifs = [
-  // GIFs avec thème TRON : lumière bleue, circuits, grille numérique
-  "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif", // Effets de lumière bleue
-  "https://media.giphy.com/media/xT0GqH01ZyKwd3aT3G/giphy.gif", // Circuits électroniques
-  "https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif",  // Grille numérique
-  "https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif", // Animation cyberpunk
-  "https://media.giphy.com/media/l46Cy1rHbQ92uuLXa/giphy.gif",  // Énergie bleue
-  "https://media.giphy.com/media/26ufdgrZhHp3QnEQY/giphy.gif",  // Interface holographique
-  "https://media.giphy.com/media/3o7TKsQ8gTp3WqXqjq/giphy.gif", // Données qui s'écoulent
-  "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif", // Grid TRON
-  "https://media.giphy.com/media/26tknCqiJrBQG6DrC/giphy.gif",  // Rétroéclairage bleu
-  "https://media.giphy.com/media/xT0Gqn3yF1phSDzr8s/giphy.gif"  // Animation futuriste
-];
-
-// GIFs alternatifs si les premiers ne fonctionnent pas
-const backupTronGifs = [
-  "https://i.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif",
-  "https://i.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",
-  "https://i.giphy.com/media/xT0GqH01ZyKwd3aT3G/giphy.gif",
-  "https://i.imgur.com/fJA5FX6.gif", // GIF TRON alternatif 1
-  "https://i.imgur.com/V4hqK7H.gif", // GIF TRON alternatif 2
-  "https://i.imgur.com/vvQmXJN.gif"  // GIF TRON alternatif 3
-];
-
-// Sélectionner un GIF aléatoire de TRON ARES
-function getRandomTronGif() {
-  try {
-    // Essayer d'abord la collection principale
-    const mainGif = tronAresGifs[Math.floor(Math.random() * tronAresGifs.length)];
-    return mainGif;
-  } catch (error) {
-    // Fallback sur les GIFs de secours
-    return backupTronGifs[Math.floor(Math.random() * backupTronGifs.length)];
-  }
-}
-
-// Fonction pour créer le footer avec GIF TRON
-function createTronFooter(prefix, totalCommands, category = null) {
-  const randomGif = getRandomTronGif();
-  
-  let footerText = `┌─────────────────────┐\n`;
-  footerText += `│  ⚡ **TRON ARES SYSTEM** ⚡  │\n`;
-  footerText += `├─────────────────────┤\n`;
-  
-  if (category) {
-    footerText += `│ 📁 Category: ${category}\n`;
-  }
-  
-  footerText += `│ 📊 Commands: ${totalCommands}\n`;
-  footerText += `│ ⚡ Prefix: ${prefix}\n`;
-  footerText += `│ 🔍 Usage: ${prefix}help [command]\n`;
-  footerText += `│ 📖 Example: ${prefix}help balance\n`;
-  footerText += `└─────────────────────┘\n\n`;
-  
-  footerText += `🎬 *Powered by TRON ARES Technology* 🍿\n`;
-  footerText += `꒰🍿˖°❗◯⃝🫟🎬TRØN†ARËS†BØT🍿⃤ ⃧🍧❓°˖ 🎟️ ꒱`;
-  
-  return {
-    caption: footerText,
-    gifUrl: randomGif
-  };
 }
 
 module.exports = {
   config: {
     name: "help",
-    aliases: ["menu", "start", "cmd", "tronhelp"],
-    version: "3.1.0",
-    author: "꒰🍿˖°❗◯⃝🫟🎬TRØN†ARËS†BØT🍿⃤ ⃧🍧❓°˖ 🎟️ ꒱",
+    aliases: ["menu", "cmd", "tronhelp", "ares"],
+    version: "5.0.0",
+    author: "TRON ARES SYSTEM",
     role: 0,
     category: "System",
-    shortDescription: "Show all commands with TRON ARES style and animated GIFs",
-    guide: "{pn} | {pn} <command> | {pn} -c <category> | {pn} all | {pn} basics",
+    shortDescription: "Affiche les commandes avec style TRON ARES",
+    guide: "{pn} | {pn} [commande] | {pn} all",
     countDown: 3
   },
 
   onStart: async function ({ message, args, event, role }) {
-    if (!xfont || !yfont || !categoryEmoji) await loadResources();
+    let prefix = getPrefix(event.threadID);  // CORRIGÉ: const → let
+    const input = args.join(" ").trim().toLowerCase();
+    
+    // Obtenir le nom de l'utilisateur
+    let userName = "User";
+    try {
+      const userInfo = await global.utils.getUserInfo(event.senderID);
+      if (userInfo && userInfo.name) {
+        userName = userInfo.name;
+      }
+    } catch (e) {
+      console.log("Could not get user info:", e.message);
+    }
 
-    const prefix = getPrefix(event.threadID);
-    const input = args.join(" ").trim();
-    const userName = (await global.utils.getUserInfo(event.senderID))?.name || "User";
-    const adminID = "61572476705473";
-    const isAdmin = event.senderID === adminID;
-
-    /* ───── Collect Categories ───── */
+    // COLLECTER LES COMMANDES PAR CATÉGORIE
     const categories = {};
-    for (const [name, cmd] of commands) {
+    
+    for (const [cmdName, cmd] of commands) {
       if (!cmd?.config) continue;
       
-      // Vérifier les permissions (admin voit tout)
-      if (!isAdmin && cmd.config.role > role) continue;
+      // Vérifier les permissions
+      if (cmd.config.role > role) continue;
       
-      const cat = (cmd.config.category || "UNCATEGORIZED").toUpperCase();
-      if (!categories[cat]) categories[cat] = [];
-      categories[cat].push({
-        name: name,
-        config: cmd.config
-      });
+      const category = (cmd.config.category || "general").toLowerCase();
+      if (!categories[category]) {
+        categories[category] = [];
+      }
+      
+      categories[category].push(cmdName);
     }
 
-    /* ───── Mode "all" - Affichage complet ───── */
-    if (args[0] === "all") {
-      let result = createHeader(userName);
+    // MODE "all" - TOUTES LES COMMANDES
+    if (input === "all") {
+      let result = createTronHeader(userName);
       
-      // Ajouter un badge admin si c'est l'admin
-      if (isAdmin) {
-        result += `╭═══✨✨✨═══╮\n│ ⚡ *ADMIN MODE ACTIVATED*\n│ Full Grid Access Granted\n╰═══✨✨✨✨═══╯\n\n`;
-      }
-
-      // Ajouter une bannière TRON ARES
-      result += `╭══════════════════════╮\n`;
-      result += `│    TRON ARES GRID    │\n`;
-      result += `│   COMMAND DATABASE   │\n`;
-      result += `╰══════════════════════╯\n\n`;
-
-      // Trier les catégories
+      // Trier les catégories par ordre alphabétique
       const sortedCategories = Object.keys(categories).sort();
       
-      // Afficher chaque catégorie dans une boîte
       for (const cat of sortedCategories) {
-        const categoryCommands = categories[cat]
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .slice(0, 8); // Limiter à 8 commandes
+        const catCommands = categories[cat];
+        if (catCommands.length === 0) continue;
         
-        if (categoryCommands.length > 0) {
-          let boxContent = "";
-          boxContent += `${getCategoryEmoji(cat)} *${fontConvert(cat, "category")}*\n`;
-          boxContent += `├──────────────────┤\n`;
-          
-          categoryCommands.forEach((cmd, index) => {
-            const cmdName = cmd.name;
-            const displayName = ` ${index + 1}. ${prefix}${cmdName}`;
-            boxContent += `│${displayName.padEnd(18)}│\n`;
-          });
-          
-          if (categories[cat].length > 8) {
-            boxContent += `│ +${categories[cat].length - 8} more`.padEnd(20) + `│\n`;
-          }
-          
-          result += createBox(boxContent) + "\n\n";
-        }
-      }
-
-      // Pied de page avec GIF TRON
-      const totalCommands = Object.values(categories).reduce((a, b) => a + b.length, 0);
-      const footer = createTronFooter(prefix, totalCommands);
-      
-      result += footer.caption;
-      
-      // Envoyer avec GIF TRON
-      return await sendWithGif(message, footer.gifUrl, result);
-    }
-
-    /* ───── Mode "basics" - Commandes de base TRON ───── */
-    if (args[0] === "basics") {
-      const basicCommandsList = {
-        "anisr": "🔍 Search anime in TRON database",
-        "balance": "🏦 Check your digital credits",
-        "gift": "🎁 Collect Grid rewards",
-        "rank": "📊 View your TRON level",
-        "pet": "🐾 Manage digital companions",
-        "trade": "💱 Exchange in Grid market",
-        "arena": "⚔️ Enter the Games Arena",
-        "vault": "🔐 Secure storage system"
-      };
-
-      let result = createHeader(userName);
-      
-      result += `╭══════════════════════╮\n`;
-      result += `│  TRON ARES BASICS    │\n`;
-      result += `│  Essential Commands  │\n`;
-      result += `╰══════════════════════╯\n\n`;
-      
-      result += `╭──────────────────────╮\n`;
-      Object.entries(basicCommandsList).forEach(([cmd, desc]) => {
-        result += `│ ⚡ ${prefix}${cmd.padEnd(12)} ${desc}\n`;
-      });
-      result += `╰──────────────────────╯\n\n`;
-      
-      const footer = createTronFooter(prefix, Object.keys(basicCommandsList).length, "BASICS");
-      result += footer.caption;
-      
-      return await sendWithGif(message, footer.gifUrl, result);
-    }
-
-    /* ───── Category View (-c) ───── */
-    if (args[0] === "-c" && args[1]) {
-      const cat = args[1].toUpperCase();
-      if (!categories[cat]) {
-        return message.reply(`❌ Grid Sector "${cat}" not found`);
-      }
-
-      let msg = createHeader(userName);
-      msg += `╭══════════════════════╮\n`;
-      msg += `│  GRID SECTOR: ${cat.padEnd(6)} │\n`;
-      msg += `╰══════════════════════╯\n\n`;
-
-      // Afficher les commandes en format tableau
-      msg += `┌─── Command List ────┐\n`;
-      
-      categories[cat]
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .forEach((cmd, index) => {
-          const num = (index + 1).toString().padStart(2, '0');
-          msg += `│ ${num}. ${prefix}${cmd.name.padEnd(15)} │\n`;
+        // Nom de catégorie formaté
+        const catName = cat.toUpperCase();
+        const emoji = getCategoryEmoji(cat);
+        
+        let boxContent = "";
+        // Limiter à 8 commandes par boîte
+        catCommands.slice(0, 8).forEach(cmd => {
+          boxContent += `${emoji} ${prefix}${cmd}\n`;
         });
-
-      msg += `└──────────────────────┘\n\n`;
-      
-      const footer = createTronFooter(prefix, categories[cat].length, cat);
-      msg += footer.caption;
-      
-      return await sendWithGif(message, footer.gifUrl, msg);
-    }
-
-    /* ───── Main Menu (sans arguments) ───── */
-    if (!input) {
-      let msg = createHeader(userName);
-      
-      // Ajouter un badge admin si c'est l'admin
-      if (isAdmin) {
-        msg += `╭═══✨✨✨═══╮\n│ ⚡ *GRID ADMIN ACCESS*\n│ System: FULL CONTROL\n╰═══✨✨✨✨═══╯\n\n`;
-      }
-
-      // Bannière d'accueil TRON
-      msg += `╭══════════════════════╮\n`;
-      msg += `│   WELCOME TO TRON    │\n`;
-      msg += `│     ARES SYSTEM      │\n`;
-      msg += `╰══════════════════════╯\n\n`;
-
-      // Afficher les catégories principales avec style TRON
-      const mainCategories = [
-        { name: "ANIME", desc: "Digital Entertainment" },
-        { name: "BANK", desc: "Credit Management" },
-        { name: "GAME", desc: "Grid Games" },
-        { name: "MEDIA", desc: "Data Streams" },
-        { name: "AI", desc: "Artificial Intelligence" }
-      ];
-      
-      mainCategories.forEach(({ name, desc }) => {
-        if (categories[name] && categories[name].length > 0) {
-          msg += `╭─ ${getCategoryEmoji(name)} ${name} ─╮\n`;
-          msg += `│ ${desc}\n`;
-          
-          // Afficher 2-3 commandes exemple
-          const examples = categories[name]
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .slice(0, 3);
-          
-          examples.forEach(cmd => {
-            msg += `│ ⚡ ${prefix}${cmd.name}\n`;
-          });
-          
-          if (categories[name].length > 3) {
-            msg += `│ ... ${categories[name].length - 3} more\n`;
-          }
-          
-          msg += `╰──────────────────────╯\n\n`;
+        
+        if (catCommands.length > 8) {
+          boxContent += `${emoji} ... +${catCommands.length - 8} more\n`;
         }
-      });
-
-      // Navigation TRON
-      msg += `╭─ QUICK NAVIGATION ─╮\n`;
-      msg += `│ ${prefix}help all\n`;
-      msg += `│ ${prefix}help basics\n`;
-      msg += `│ ${prefix}help -c <sector>\n`;
-      msg += `│ ${prefix}help <command>\n`;
-      msg += `╰──────────────────────╯\n\n`;
-
-      // Pied de page avec GIF TRON
-      const totalCommands = Object.values(categories).reduce((a, b) => a + b.length, 0);
-      const footer = createTronFooter(prefix, totalCommands);
-      msg += footer.caption;
+        
+        result += createTronBox(boxContent, `${emoji} ${catName}`) + "\n\n";
+      }
       
-      return await sendWithGif(message, footer.gifUrl, msg);
+      const totalCommands = Object.values(categories).reduce((sum, arr) => sum + arr.length, 0);
+      result += createTronFooter(prefix, totalCommands);
+      
+      // Message final
+      result += `\n╭═══✨✨✨═══╮
+│ ⚡ *TRON ARES DATABASE* ⚡
+│ 📊 Total: ${totalCommands} commandes actives
+│ ⚡ Système: OPÉRATIONNEL
+╰═══✨✨✨═══╯`;
+      
+      return await sendWithTronGif(message, result);
     }
 
-    /* ───── Command Info ───── */
-    const cmd = findCommand(input);
-    if (!cmd) {
-      // Recherche approximative avec style TRON
-      const allCommands = [];
-      for (const [name, command] of commands) {
-        if (command?.config) {
-          allCommands.push(name);
-          if (Array.isArray(command.config.aliases)) {
-            allCommands.push(...command.config.aliases);
+    // HELP SPÉCIFIQUE (commande)
+    if (input) {
+      let foundCmd = null;
+      let foundCmdName = "";
+      
+      for (const [cmdName, cmd] of commands) {
+        if (!cmd?.config) continue;
+        
+        if (cmdName.toLowerCase() === input) {
+          foundCmd = cmd;
+          foundCmdName = cmdName;
+          break;
+        }
+        
+        // Vérifier les alias
+        if (Array.isArray(cmd.config.aliases)) {
+          if (cmd.config.aliases.some(alias => alias.toLowerCase() === input)) {
+            foundCmd = cmd;
+            foundCmdName = cmdName;
+            break;
           }
         }
       }
       
-      // Trouver les commandes similaires
-      const similar = allCommands
-        .filter(c => c.toLowerCase().includes(input.toLowerCase()))
-        .slice(0, 3);
-      
-      let reply = createHeader(userName);
-      reply += `╭══════════════════════╮\n`;
-      reply += `│   COMMAND NOT FOUND  │\n`;
-      reply += `╰══════════════════════╯\n\n`;
-      reply += `❌ Command "${input}" not in Grid\n\n`;
-      
-      if (similar.length > 0) {
-        reply += `⚡ Did you mean?\n`;
-        reply += `├──────────────────────┤\n`;
-        similar.forEach(s => {
-          reply += `│ ${prefix}${s}\n`;
-        });
-        reply += `╰──────────────────────╯\n\n`;
+      if (foundCmd) {
+        const c = foundCmd.config;
+        const aliases = Array.isArray(c.aliases) ? c.aliases.join(", ") : "None";
+        const category = c.category || "general";
+        const emoji = getCategoryEmoji(category);
+        
+        let result = createTronHeader(userName);
+        
+        // Boîte d'information de la commande
+        let infoContent = `${emoji} Nom: ${prefix}${foundCmdName}\n`;
+        infoContent += `📁 Catégorie: ${category.toUpperCase()}\n`;
+        infoContent += `📝 Description: ${c.shortDescription || "Pas de description"}\n`;
+        
+        if (c.longDescription) {
+          infoContent += `🔎 Détails: ${c.longDescription}\n`;
+        }
+        
+        infoContent += `🔤 Alias: ${aliases}\n`;
+        infoContent += `👥 Rôle: ${c.role === 0 ? "Tous les utilisateurs" : c.role === 1 ? "Admins de groupe" : "Admin bot"}\n`;
+        infoContent += `⏱️ Cooldown: ${c.countDown || 5}s\n`;
+        
+        if (c.version) {
+          infoContent += `🔢 Version: ${c.version}\n`;
+        }
+        
+        if (c.author) {
+          infoContent += `👨‍💻 Auteur: ${c.author}\n`;
+        }
+        
+        result += createTronBox(infoContent, "🔍 ANALYSE DE COMMANDE") + "\n\n";
+        
+        // Guide d'utilisation si disponible
+        if (c.guide) {
+          let guideText = c.guide;
+          if (typeof guideText === 'string') {
+            guideText = guideText.replace(/{pn}/g, prefix + foundCmdName);
+            result += createTronBox(guideText, "📚 GUIDE D'UTILISATION") + "\n\n";
+          }
+        }
+        
+        result += createTronFooter(prefix, 1);
+        
+        // Message final
+        result += `\n╭═══✨✨✨═══╮
+│ ⚡ *TRON ARES COMMAND* ⚡
+│ 🎮 Statut: ACTIVÉ
+│ ⚡ Type: ${category.toUpperCase()}
+╰═══✨✨✨═══╯`;
+        
+        return await sendWithTronGif(message, result);
       }
-      
-      const footer = createTronFooter(prefix, 0);
-      reply += footer.caption;
-      
-      return await sendWithGif(message, footer.gifUrl, reply);
     }
 
-    const c = cmd.config;
-    const aliasText = Array.isArray(c.aliases)
-      ? c.aliases.join(", ")
-      : c.aliases || "None";
-
-    let usage = "No usage data";
-    if (c.guide) {
-      if (typeof c.guide === "string") {
-        usage = c.guide;
-      } else if (typeof c.guide === "object") {
-        usage = c.guide.en || Object.values(c.guide)[0] || "No usage";
-      }
-      usage = usage.replace(/{pn}/g, `${prefix}${c.name}`);
-    }
-
-    // Créer l'affichage détaillé avec style TRON
-    const msg = createHeader(userName) + 
-      `╭══════════════════════╮
-│   COMMAND ANALYSIS   │
-╰══════════════════════╯
-
-╭─ COMMAND DATA ─╮
-│ Name: ${prefix}${c.name}
-│ Sector: ${(c.category || "UNCATEGORIZED").toUpperCase()}
-│ Access: ${roleText(c.role)}
-│ Version: ${c.version || "1.0"}
-│ Author: ${c.author || "TRON SYSTEM"}
-╰──────────────────────╯
-
-╭─ DESCRIPTION ─╮
-│ ${c.longDescription || c.shortDescription || "No description available"}
-╰──────────────────────╯
-
-╭─ USAGE PARAMETERS ─╮
-│ Aliases: ${aliasText}
-│ Usage: ${usage}
-│ Cooldown: ${c.countDown || 5}s
-│ Status: ⚡ ACTIVE
-╰──────────────────────╯\n\n`;
-
-    const footer = createTronFooter(prefix, 1);
-    const fullMessage = msg + footer.caption;
+    /* ========== HELP PRINCIPAL (sans arguments) ========== */
+    const totalCommands = Object.values(categories).reduce((sum, arr) => sum + arr.length, 0);
     
-    return await sendWithGif(message, footer.gifUrl, fullMessage);
+    let result = createTronHeader(userName);
+    
+    // Catégories principales à afficher
+    const mainCategories = [
+      "anime", "bank", "game", "economy", "fun",
+      "media", "utility", "tools", "rpg", "general"
+    ];
+    
+    // Afficher maximum 6 catégories dans le menu principal
+    let displayedCount = 0;
+    for (const cat of mainCategories) {
+      if (displayedCount >= 6) break;
+      
+      if (categories[cat] && categories[cat].length > 0) {
+        const emoji = getCategoryEmoji(cat);
+        const catName = cat.toUpperCase();
+        
+        let boxContent = "";
+        // Afficher max 4 commandes par catégorie dans le menu principal
+        const displayCommands = categories[cat].slice(0, 4);
+        
+        displayCommands.forEach(cmd => {
+          boxContent += `${emoji} ${prefix}${cmd}\n`;
+        });
+        
+        if (categories[cat].length > 4) {
+          boxContent += `${emoji} ... +${categories[cat].length - 4} plus\n`;
+        }
+        
+        result += createTronBox(boxContent, `${emoji} ${catName}`) + "\n\n";
+        displayedCount++;
+      }
+    }
+    
+    // Boîte de navigation
+    const navContent = `🔎 ${prefix}help all → Toutes les commandes\n`;
+    navContent += `📖 ${prefix}help [cmd] → Détails d'une commande\n`;
+    navContent += `🎮 Exemple: ${prefix}help balance\n`;
+    navContent += `📊 Total: ${totalCommands} commandes disponibles`;
+    
+    result += createTronBox(navContent, "🚀 NAVIGATION RAPIDE") + "\n\n";
+    
+    // Pied de page
+    result += createTronFooter(prefix, totalCommands);
+    
+    // Message final TRON ARES
+    result += `\n╭═══✨✨✨═══╮
+│ ⚡ *TRON ARES XMAS SYSTEM* ⚡
+│ 💙 TRON ARES envoie des salutations électroniques
+│ ⚡ mais sincères. Le futur commence maintenant.
+╰═══✨✨✨═══╯`;
+    
+    return await sendWithTronGif(message, result);
   },
 
-  // Fonction pour changer le nom de fichier temporaire
+  // NETTOYAGE OPTIONNEL (peut être désactivé)
   onExit: function () {
-    // Nettoyer les fichiers temporaires au démarrage
-    const tempFiles = fs.readdirSync('./').filter(file => file.startsWith('tron_ares_'));
-    tempFiles.forEach(file => {
-      try {
-        fs.unlinkSync(`./${file}`);
-      } catch (e) {
-        // Ignorer les erreurs de suppression
-      }
-    });
+    // Optionnel: Nettoyer les vieux fichiers une fois par jour
+    // Tu peux commenter cette fonction si tu ne veux pas du tout nettoyer
+    try {
+      const now = Date.now();
+      const tempFiles = fs.readdirSync('./cache').filter(file => file.startsWith('tron_ares_help_'));
+      
+      tempFiles.forEach(file => {
+        try {
+          const filePath = `./cache/${file}`;
+          const stats = fs.statSync(filePath);
+          const fileAge = now - stats.mtimeMs;
+          
+          // Supprimer seulement les fichiers de plus de 24h
+          if (fileAge > 24 * 60 * 60 * 1000) {
+            fs.unlinkSync(filePath);
+          }
+        } catch (e) {}
+      });
+    } catch (error) {
+      // Ignorer les erreurs
+    }
   }
 };
